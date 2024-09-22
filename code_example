@@ -1,0 +1,140 @@
+﻿import pandas as pd
+import numpy as np
+import sklearn
+import math
+import seaborn as sb
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import VarianceThreshold
+import random
+import warnings
+warnings.filterwarnings('ignore')
+starting_data=pd.read_csv('images.csv')
+Y=starting_data['label']
+del starting_data['label']
+X=starting_data.copy()
+
+X_train,X_test,y_train,y_test=train_test_split(X,Y,train_size=0.8)
+
+selector=VarianceThreshold(threshold=5)
+selector.fit(X_train)
+useful_factors=selector.get_feature_names_out()
+X_train=X_train[useful_factors].copy()
+
+X_train,X_valid,y_train,y_valid=train_test_split(X_train,y_train,train_size=0.8)
+
+from sklearn.ensemble import RandomForestClassifier
+
+model_random_forest = RandomForestClassifier(n_estimators=100,
+                                             min_samples_leaf=3,
+                                             max_features=int(len(list(X_train.columns)) ** (1/2)),
+                                             criterion='gini',
+                                             random_state=0)
+model_random_forest.fit(X_train, y_train)
+
+X_test=X_test[useful_factors].copy()
+
+print('Итоговая точность модели Случайного леса на тестовой выборке - ',round(model_random_forest.score(X_test,y_test),2))
+###
+###
+﻿import pandas as pd
+import numpy as np
+import math
+import copy
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+
+
+
+# #       Пре-подготовка данных
+# print('Пре-подготовка данных')
+# starting_data=pd.read_csv('data.csv',sep=',')
+
+# del starting_data['Online boarding']
+# del starting_data['Leg room service']
+
+# customer_type_possible=['disloyal Customer','Loyal Customer']
+# starting_data['Customer Type']=[float(customer_type_possible.index(starting_data.loc[i,'Customer Type'])) for i in range(starting_data.shape[0])]
+# column_names=starting_data.columns.values.tolist()
+# column_names_to_diff=['Gender','Type of Travel','Class']
+# for name in column_names_to_diff: 
+#     curr_diff_values=starting_data[name].unique().tolist()
+#     for curr_value in curr_diff_values:
+#         starting_data[name+' - '+curr_value]=0.0
+#     for i in range(starting_data.shape[0]):
+#         starting_data.loc[i,name+' - '+starting_data.loc[i,name]]=1.0
+#     del starting_data[name]
+# starting_data.to_csv('pre_ready_data.csv',index=False)
+
+# #       Разделение данных на выборки и нормализация факторов
+# print('Разделение данных на выборки и нормализация факторов')
+# pre_ready_data=pd.read_csv('pre_ready_data.csv',sep=',')
+
+# Y=pre_ready_data['satisfaction']
+# del  pre_ready_data['satisfaction']  
+# X=pre_ready_data.copy()
+# X_train,X_test,y_train,y_test=train_test_split(X,Y)
+
+# column_names=X_train.columns.values.tolist()
+# min_max_save={}
+# for name in column_names:
+#     curr_values=X_train[name].tolist()
+#     curr_min=min(curr_values)
+#     curr_max=max(curr_values)
+#     X_train[name]=round((X_train[name]-curr_min)/(curr_max-curr_min),2)
+#     min_max_save[name]=[curr_min,curr_max]
+ 
+# for name in column_names:
+#     X_test[name]=round((X_test[name]-min_max_save[name][0])/(min_max_save[name][1]-min_max_save[name][0]),2)
+
+# X_train,X_valid,y_train,y_valid=train_test_split(X_train,y_train)
+
+# X_train.to_csv('X_train.csv',index=False)
+# X_valid.to_csv('X_valid.csv',index=False)
+# X_test.to_csv('X_test.csv',index=False)
+# y_train.to_csv('y_train.csv',index=False)
+# y_valid.to_csv('y_valid.csv',index=False)
+# y_test.to_csv('y_test.csv',index=False)
+
+X_train=pd.read_csv('X_train.csv')
+X_valid=pd.read_csv('X_valid.csv')
+X_test=pd.read_csv('X_test.csv')
+y_train=pd.read_csv('y_train.csv')
+y_valid=pd.read_csv('y_valid.csv')
+y_test=pd.read_csv('y_test.csv')
+
+#   Изменение некоторых факторов для увеличения точности модели
+print('Изменение некоторых факторов для увеличения точности модели')
+X_train['Type of Travel - Business travel']*=2
+X_valid['Type of Travel - Business travel']*=2
+X_test['Type of Travel - Business travel']*=2
+
+X_train['Departure Delay in Minutes']*=-1
+X_valid['Departure Delay in Minutes']*=-1
+X_test['Departure Delay in Minutes']*=-1
+
+X_train['Arrival Delay in Minutes']*=-1
+X_valid['Arrival Delay in Minutes']*=-1
+X_test['Arrival Delay in Minutes']*=-1
+
+
+X_train=X_train.fillna(0)
+X_valid=X_valid.fillna(0)
+X_test=X_test.fillna(0)
+y_train=y_train.fillna(0)
+y_valid=y_valid.fillna(0)
+y_test=y_test.fillna(0)
+
+model=LogisticRegression()
+model.fit(X_train,y_train)
+print('Полученная точность на валидационной выборке - ',model.score(X_valid,y_valid))
+print('Полученная точность на тестовой выборке - ',model.score(X_test,y_test))
+print('Пример работы программы:')
+for i in range(40,50):
+    print('Данные объекта - ',X_test.iloc[i])
+    print('Предсказанное значение - ',model.predict([X_test.iloc[i]]))
+    print('Реальное значение - ',y_test.iloc[i])
+    print()
+    print()
+    
+
